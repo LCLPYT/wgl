@@ -1,6 +1,14 @@
 import vertexShader from "@/assets/shader/vertex.glsl?raw";
 import fragmentShader from "@/assets/shader/fragment.glsl?raw";
 
+const vertices = [
+    1.0, 1.0, 0.0,
+    1.0, -1.0, 0.0,
+    -1.0, -1.0, 0.0,
+    -1.0,  1.0, 0.0
+];
+const indices = [0, 1, 2, 2, 3, 0];
+
 export function setupCanvas(canvas: HTMLCanvasElement) {
     const clientRect = canvas.getBoundingClientRect();
     canvas.width = clientRect.width;
@@ -11,14 +19,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         alert("Unable to initialize WebGL. Your browser or machine may not support it.");
         return;
     }
-
-    const vertices = [
-        1.0, 1.0, 0.0,
-        1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0,
-        -1.0,  1.0, 0.0
-    ];
-    const indices = [0, 1, 2, 2, 3, 0];
 
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -81,12 +81,27 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     const resLoc = gl.getUniformLocation(shaderProgram, "resolution");
     gl.uniform2fv(resLoc, new Float32Array([canvas.width, canvas.height]));
 
-    // actually draw triangle
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    const timeLoc = gl.getUniformLocation(shaderProgram, "time");
 
+    // TODO adjust on window resize
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-    gl.disableVertexAttribArray(coordinates);
+    gl.clearColor(0, 0, 0, 1);
+
+    animationStart = performance.now();
+    render(gl, timeLoc ? time => gl.uniform1f(timeLoc, time / 1000 * 0.5) : undefined);
+}
+
+let animationStart: DOMHighResTimeStamp = 0;
+
+export function render(gl: WebGL2RenderingContext, timeCallback?: (time: number) => void) {
+    requestAnimationFrame(now => {
+        const time = now - animationStart;
+        if (timeCallback) timeCallback(time);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
+        render(gl, timeCallback);
+    });
 }
