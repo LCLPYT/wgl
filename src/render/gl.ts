@@ -12,12 +12,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
         return;
     }
 
-    const indices = [0, 1, 2];
     const vertices = [
-        -1.0, -1.0, 0.0,
+        1.0, 1.0, 0.0,
         1.0, -1.0, 0.0,
-        0.0,  1.0, 0.0,
+        -1.0, -1.0, 0.0,
+        -1.0,  1.0, 0.0
     ];
+    const indices = [0, 1, 2, 2, 3, 0];
 
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -37,6 +38,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     gl.shaderSource(vertShader, vertexShader);
     gl.compileShader(vertShader);
 
+    const vertexShaderCompiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
+    if (vertexShaderCompiled !== true) {
+        const compilationLog = gl.getShaderInfoLog(vertShader);
+        console.error('Could not compile vertex shader:', compilationLog);
+        return;
+    }
+
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!fragShader) {
         console.error("Could not create fragment shader");
@@ -44,6 +52,13 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     }
     gl.shaderSource(fragShader, fragmentShader);
     gl.compileShader(fragShader);
+
+    const fragmentShaderCompiled = gl.getShaderParameter(fragShader, gl.COMPILE_STATUS);
+    if (fragmentShaderCompiled !== true) {
+        const compilationLog = gl.getShaderInfoLog(fragShader);
+        console.error('Could not compile fragment shader:', compilationLog);
+        return;
+    }
 
     const shaderProgram = gl.createProgram();
     if (!shaderProgram) {
@@ -63,14 +78,15 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     gl.vertexAttribPointer(coordinates, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinates);
 
+    const resLoc = gl.getUniformLocation(shaderProgram, "resolution");
+    gl.uniform2fv(resLoc, new Float32Array([canvas.width, canvas.height]));
+
     // actually draw triangle
     gl.clearColor(0, 0, 0, 1);
-    gl.enable(gl.DEPTH_TEST);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-    gl.disable(gl.DEPTH_TEST);
     gl.disableVertexAttribArray(coordinates);
 }
