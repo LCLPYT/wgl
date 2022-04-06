@@ -1,35 +1,20 @@
-import vertexShader from "@/assets/shader/vertex.glsl?raw";
-import fragmentShader from "@/assets/shader/fragment.glsl?raw";
-
-const vertices = [
-    1.0, 1.0, 0.0,
-    1.0, -1.0, 0.0,
-    -1.0, -1.0, 0.0,
-    -1.0,  1.0, 0.0
-];
-const indices = [0, 1, 2, 2, 3, 0];
-
-export function setupCanvas(canvas: HTMLCanvasElement) {
+export function resizeCanvas(canvas: HTMLCanvasElement) {
     const clientRect = canvas.getBoundingClientRect();
     canvas.width = clientRect.width;
     canvas.height = clientRect.height;
+}
 
+export function createWebGL2Context(canvas: HTMLCanvasElement) {
     const gl = canvas.getContext("webgl2");
     if (gl === null) {
         alert("Unable to initialize WebGL. Your browser or machine may not support it.");
         return;
     }
 
-    const vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    return gl;
+}
 
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-
+export function createShaderProgram(gl: WebGL2RenderingContext, vertexShader: string, fragmentShader: string) {
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
     if (!vertShader) {
         console.error("Could not create vertex shader");
@@ -69,39 +54,6 @@ export function setupCanvas(canvas: HTMLCanvasElement) {
     gl.attachShader(shaderProgram, vertShader);
     gl.attachShader(shaderProgram, fragShader);
     gl.linkProgram(shaderProgram);
-    gl.useProgram(shaderProgram);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-    const coordinates = gl.getAttribLocation(shaderProgram, "coordinates");
-    gl.vertexAttribPointer(coordinates, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(coordinates);
-
-    const resLoc = gl.getUniformLocation(shaderProgram, "resolution");
-    gl.uniform2fv(resLoc, new Float32Array([canvas.width, canvas.height]));
-
-    const timeLoc = gl.getUniformLocation(shaderProgram, "time");
-
-    // TODO adjust on window resize
-    gl.viewport(0, 0, canvas.width, canvas.height);
-
-    gl.clearColor(0, 0, 0, 1);
-
-    animationStart = performance.now();
-    render(gl, timeLoc ? time => gl.uniform1f(timeLoc, time / 1000 * 0.5) : undefined);
-}
-
-let animationStart: DOMHighResTimeStamp = 0;
-
-export function render(gl: WebGL2RenderingContext, timeCallback?: (time: number) => void) {
-    requestAnimationFrame(now => {
-        const time = now - animationStart;
-        if (timeCallback) timeCallback(time);
-
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-
-        render(gl, timeCallback);
-    });
+    return shaderProgram;
 }

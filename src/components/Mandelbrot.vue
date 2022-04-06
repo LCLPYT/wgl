@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import {setupCanvas} from "@/render/gl";
 import "@/assets/fullscreen.css";
+import {setupMandelbrotScene} from "@/render/scene/mandelbrot";
 
 const canvas = ref(null as null | HTMLCanvasElement);
 
@@ -10,7 +10,7 @@ onMounted(() => {
   if (!canvas.value) {
     console.error("Canvas could not be found.");
   } else {
-    setupCanvas(canvas.value);
+    setupMandelbrotScene(canvas.value);
   }
 });
 </script>

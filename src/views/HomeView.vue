@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Canvas from "@/components/Canvas.vue";</script>
+import Canvas from "@/components/Mandelbrot.vue";</script>
 
 <template>
   <main>
