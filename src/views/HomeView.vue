@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import TheWelcome from "@/components/TheWelcome.vue";</script>
+import Canvas from "@/components/Canvas.vue";</script>
 
 <template>
   <main>
-    <TheWelcome />
+    <Canvas />
   </main>
 </template>
